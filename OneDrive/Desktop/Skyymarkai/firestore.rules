@@ -1,0 +1,142 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Users collection - identity + plan context + permissions anchors
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create, update: if isSignedIn() && request.auth.uid == userId &&
+        (
+          request.resource.data.uid is string &&
+          request.resource.data.email is string &&
+          (request.resource.data.displayName == null || request.resource.data.displayName is string) &&
+          (request.resource.data.photoURL == null || request.resource.data.photoURL is string) &&
+          request.resource.data.role in ["founder", "admin", "member"] &&
+          request.resource.data.createdAt is timestamp &&
+          request.resource.data.updatedAt is timestamp &&
+          (request.resource.data.lastSeenAt == null || request.resource.data.lastSeenAt is timestamp) &&
+          // Strongly recommended
+          (request.resource.data.defaultWorkspaceId == null || request.resource.data.defaultWorkspaceId is string) &&
+          (request.resource.data.status == null || request.resource.data.status in ["active", "suspended", "deleted"]) &&
+          (request.resource.data.flags == null || (request.resource.data.flags is map && request.resource.data.flags.isFounder is bool && request.resource.data.flags.isTestUser is bool))
+        );
+      allow delete: if false;
+    }
+    
+    // Workspaces - simplified
+    match /workspaces/{workspaceId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Workspace members - simplified
+    match /workspace_members/{memberId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Workflow templates - public read for marketplace
+    match /workflow_templates/{templateId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+    
+    // Template installs - anyone can track installs
+    match /template_installs/{installId} {
+      allow read, create: if isSignedIn();
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.installedByUid;
+    }
+    
+    // Workflows - allow authenticated users
+    match /workflows/{workflowId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Workflow runs
+    match /workflow_runs/{runId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Leads
+    match /leads/{leadId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Follow-up sequences
+    match /followup_sequences/{sequenceId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Follow-up jobs
+    match /followup_jobs/{jobId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Inbox threads
+    match /inbox_threads/{threadId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Inbox messages
+    match /inbox_messages/{messageId} {
+      allow read, create, delete: if isSignedIn();
+    }
+    
+    // Assets
+    match /assets/{assetId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Scheduled posts
+    match /scheduled_posts/{postId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Campaigns
+    match /campaigns/{campaignId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Orchestrator decisions
+    match /orchestrator_decisions/{decisionId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Shareable reports
+    match /shareable_reports/{reportId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Approval tasks
+    match /approval_tasks/{taskId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Brand profiles
+    match /brand_profiles/{profileId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Content generations
+    match /content_generations/{generationId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Content suggestions
+    match /content_suggestions/{suggestionId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    // Onboarding states
+    match /onboarding_states/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

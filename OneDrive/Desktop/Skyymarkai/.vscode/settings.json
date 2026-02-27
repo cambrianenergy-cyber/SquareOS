@@ -1,0 +1,4 @@
+{
+    "chat.agent.maxRequests": 200,
+    "terminal.integrated.cwd": ""
+}
