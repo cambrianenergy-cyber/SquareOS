@@ -45,6 +45,14 @@ export default function ConnectOnboarding() {
         return;
       }
 
+      const workspaceId = window.localStorage.getItem('workspaceId') || '';
+      if (!workspaceId) {
+        setError('Workspace not found. Please start from the beginning.');
+        setSubmitting(false);
+        router.push('/onboarding');
+        return;
+      }
+
       // Save connections to Firestore (one doc per connection)
       for (const [key, status] of Object.entries(connections)) {
         if (status === 'connected') {

@@ -12,18 +12,18 @@ export default function OnboardingEntry() {
 
   useEffect(() => {
     let mounted = true;
-    let timeout: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout | undefined;
 
     const checkAuth = async () => {
       try {
         // Wait for auth to initialize
-        await new Promise<void>((resolve) => {
+        const authTimeout = await new Promise<void>((resolve) => {
           const unsubscribe = auth.onAuthStateChanged((user) => {
             unsubscribe();
             resolve();
           });
           // Timeout after 3 seconds
-          setTimeout(() => {
+          timeout = setTimeout(() => {
             unsubscribe();
             resolve();
           }, 3000);
@@ -98,7 +98,9 @@ export default function OnboardingEntry() {
 
     return () => {
       mounted = false;
-      clearTimeout(timeout);
+      if (timeout) {
+        clearTimeout(timeout);
+      }
     };
   }, [router]);
 
